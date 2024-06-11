@@ -1,0 +1,169 @@
+---
+title: "Fourier S3 Maths"
+date: "2023-09-11"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 3.5.1 et 3.5.2
+
+```{r}
+fe <- 16 #fréquence d'échantillonnage 
+Te <- 1/fe #période d'échantillonnage 
+N <- 8 #nombre échantillon
+n <- 0:(N-1) # vecteur pour les indices d'échantillonnage
+t <- n * Te #vecteur représentant ces instants, qui vont de 0 à (N-1)*Te
+xt <- round(2 * sin(8 * pi * t) + 8 * cos(4 * pi * t), 5)
+
+Xk <- complex(real=rep(0,N), imaginary=rep(0,N)) # Initialiser un vecteur complexe
+
+
+for (k in 0:(N-1)) {
+  for (nn in n) {
+    Xk[k+1] = Xk[k+1] + round(xt[nn+1] * exp(-1i * 2 * pi * k * nn / N), 5) #formule tfd
+  }
+}
+
+print(Xk)
+
+# Dense sampling
+t_dense <- seq(0, max(t), length.out=1000) # Create a dense time vector
+xt_dense <- 2 * sin(8 * pi * t_dense) + 8 * cos(4 * pi * t_dense)
+
+
+# Plotting the dense signal as a dotted line
+plot(t_dense, xt_dense, type='l', lty=2, col="blue", xlab='Time (s)', ylab='x(t)', main='Signal x(t)')
+lines(t, xt, type='o', col="red") # Add the sampled points on top
+
+
+# Plotting the magnitude spectrum
+magnitude <- Mod(Xk)
+freq <- (n*fe)/N
+barplot(magnitude, names.arg=freq, xlab='Frequency (Hz)', ylab='Amplitude', main="Spectre d'amplitude", border='blue', col='lightblue', ylim=c(0, max(magnitude)))
+
+
+```
+
+
+## 3.5.3
+
+TFD inverse
+1. Implémenter la méthode de TFD inverse.
+2. Appliquer la TFD inverse aux résultats des deux précdents exercices afin de retrouver les signaux initiaux
+
+```{r}
+# Exemple
+x = c(1, 2, 3, 4)
+N = 4
+
+# Calcul de la TFD avec fft()
+X = fft(x)
+
+# inverse_fft pour récupérer la séquence originale
+x_recovered = Re(fft(X, inverse=TRUE))/(N)
+
+# Affichage
+print(x)
+print(X)
+print(x_recovered)
+```
+
+```{r}
+TFD_inverse = function(X) {
+  N = length(X) # Nombre de points
+  x = complex(real = numeric(N), imaginary = numeric(N)) # Initialisation de la séquence de sortie
+  
+  # Boucle pour calculer chaque point
+  for (n in 0:(N-1)) {
+    somme = 0 + 0i # initialisation de la somme pour chaque terme x[n]
+    
+    # Calcul de chaque point k dans la TFD
+    for (k in 0:(N-1)){
+      somme = somme + X[k+1]*exp(2i * pi * k * n / N)
+    }
+    
+    x[n+1] = somme/N
+  }
+  
+  # Resultat, uniquement la partie réelle
+  x_res = round(x, 8)
+  return(Re(x_res))
+}
+
+# Exemple
+X = c(10, -2+2i, -2, -2-2i) # TFD simple
+x_recovered = TFD_inverse(X)
+
+# Affichage
+print(X)
+print(x_recovered)
+```
+
+# Test fonction
+# Signal 3.5.1
+
+```{r}
+# Paramètres
+N <- 8  # Nombre de points
+fe <- 16  # Fréquence d'échantillonnage
+T <- 1 / fe  # Intervalle d'échantillonnage
+
+# Instants d'échantillonnage
+n <- 0:(N - 1)
+t_n <- n * T
+
+# Générer la séquence
+x_n <- 2 * sin(8 * pi * t_n) + 8 * cos(4 * pi * t_n)
+
+# Calculer la TFD
+X <- fft(x_n)
+
+# Calculer la TFDI en utilisant votre fonction TFD_inverse
+x_recovered <- TFD_inverse(X)
+
+# Calculer l'erreur moyenne quadratique (RMSE)
+rmse <- sqrt(mean((x_n - x_recovered)^2))
+
+# Afficher les résultats
+print(paste("RMSE: ", rmse))
+print("Séquence originale x_n:")
+print(x_n)
+print("Séquence récupérée x_recovered:")
+print(x_recovered)
+```
+
+# Signal 3.5.2
+
+```{r}
+# Paramètres
+N <- 24  # Nombre de points
+fe <- 16  # Fréquence d'échantillonnage
+T <- 1 / fe  # Intervalle d'échantillonnage
+
+# Instants d'échantillonnage
+n <- 0:(N - 1)
+t_n <- n * T
+
+# Générer la séquence
+x_n <- 3 * sin(8 * pi * t_n) + 4 * cos(6 * pi * t_n)
+
+# Calculer la TFD
+X <- fft(x_n)
+
+# Calculer la TFDI en utilisant votre fonction TFD_inverse
+x_recovered <- TFD_inverse(X)
+
+# Calculer l'erreur moyenne quadratique (RMSE)
+rmse <- sqrt(mean((x_n - x_recovered)^2))
+
+# Afficher les résultats
+print(paste("RMSE: ", rmse))
+print("Séquence originale x_n:")
+print(x_n)
+print("Séquence récupérée x_recovered:")
+print(x_recovered)
+```
+

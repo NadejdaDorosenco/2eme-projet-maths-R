@@ -1,0 +1,330 @@
+---
+title: "exo1.5"
+output: pdf_document
+date: "2023-09-12"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+Exo 1.5
+```{r}
+f <- function(t_values) {
+  f_values <- numeric(length(t_values))
+  
+  for (i in 1:length(t_values)) {
+    t_mod <- t_values[i]
+    
+    # Utilisation de boucles if-else pour rendre la fonction périodique
+    while (t_mod > pi) {
+      t_mod <- t_mod - 2*pi
+    }
+    while (t_mod <= -pi) {
+      t_mod <- t_mod + 2*pi
+    }
+    
+    f_values[i] <- pi - abs(t_mod)
+  }
+  
+  return(f_values)
+}
+
+g <- function(t_values) {
+  g_values <- numeric(length(t_values))
+  
+  for (i in 1:length(t_values)) {
+    t_mod <- t_values[i]
+    
+    # Utilisation de boucles if-else pour rendre la fonction périodique
+    while (t_mod > pi) {
+      t_mod <- t_mod - 2*pi
+    }
+    while (t_mod <= -pi) {
+      t_mod <- t_mod + 2*pi
+    }
+    
+    g_values[i] <- t_mod^2 - pi^2
+  }
+  
+  return(g_values)
+}
+
+h <- function(t_values) {
+  h_values <- numeric(length(t_values))
+  
+  for (i in 1:length(t_values)) {
+    t_mod <- t_values[i]
+    
+    # Utilisation de boucles if-else pour rendre la fonction périodique
+    while (t_mod >= 2*pi) {
+      t_mod <- t_mod - 2*pi
+    }
+    while (t_mod < 0) {
+      t_mod <- t_mod + 2*pi
+    }
+    
+    if (t_mod < pi) {
+      h_values[i] <- exp(-t_mod/pi)
+    } else {
+      h_values[i] <- 0
+    }
+  }
+  
+  return(h_values)
+}
+```
+
+Question 1
+```{r}
+# Utilisation de ggplot2 pour le graphique
+library(ggplot2)
+
+# Créer un vecteur de valeurs t dans l'intervalle ]-5*pi, 5*pi]
+t_values <- seq(-5*pi, 5*pi, by=0.01)
+
+# Calculer les valeurs de f(t) en utilisant la fonction f
+f_values <- f(t_values)
+
+data <- data.frame(t=t_values, f=f_values)
+
+ggplot(data, aes(x=t, y=f)) +
+  geom_line() +
+  ggtitle(expression(paste("f(t) = ", pi, " - |t|, ", "t in [-5", pi, ", 5", pi, "]"))) +
+  xlab("t") +
+  ylab("f(t)")
+```
+
+
+
+```{r}
+# Utilisation de ggplot2 pour le graphique
+library(ggplot2)
+
+# Créer un vecteur de valeurs t dans l'intervalle ]-5*pi, 5*pi]
+t_values <- seq(-5*pi, 5*pi, by=0.01)
+
+# Calculer les valeurs de g(t) en utilisant la fonction calculate_g_values
+g_values <- g(t_values)
+
+data <- data.frame(t=t_values, g=g_values)
+
+ggplot(data, aes(x=t, y=g)) +
+  geom_line() +
+  ggtitle(expression(paste("g(t) = ", t^2, " - ", pi^2, ", ", "t in [-5", pi, ", 5", pi, "]"))) +
+  xlab("t") +
+  ylab("g(t)")
+```
+
+```{r}
+
+# Utilisation de ggplot2 pour le graphique
+library(ggplot2)
+
+# Créer un vecteur de valeurs t dans l'intervalle ]-5*pi, 5*pi]
+t_values <- seq(-5*pi, 5*pi, by=0.01)
+
+# Calculer les valeurs de h(t) en utilisant la fonction calculate_h_values
+h_values <- h(t_values)
+
+data <- data.frame(t=t_values, h=h_values)
+
+ggplot(data, aes(x=t, y=h)) +
+  geom_line() +
+  ggtitle(expression(paste("h(t) = {e^{-t/pi}, t in [0, pi[; 0, t in [pi, 2pi[}, ", "t in [-5", pi, ", 5", pi, "]"))) +
+  xlab("t") +
+  ylab("h(t)")
+
+```
+
+
+Questions 2
+
+
+```{r}
+library(stats)
+
+
+calculate_fourier_coefficients <- function(f, n) {
+  an <- integrate(function(t) f(t) * cos(n*t), lower = -pi, upper = pi)$value / pi
+  bn <- integrate(function(t) f(t) * sin(n*t), lower = -pi, upper = pi)$value / pi
+  cn <- complex(real = an, imaginary = - bn)
+
+  return(list(an = an, bn = bn, cn = cn))
+}
+
+
+
+# Demander à l'utilisateur de saisir une valeur pour n
+n <- as.numeric(readline(prompt = "Veuillez entrer une valeur pour n: "))
+
+# Calculer a0 pour f(t), g(t) et h(t)
+a0_f <- integrate(f, lower = -pi, upper = pi)$value / (2*pi)
+a0_g <- integrate(g, lower = -pi, upper = pi)$value / (2*pi)
+a0_h <- integrate(h, lower = 0, upper = 2*pi)$value / (2*pi)
+
+# Calculer les coefficients pour f(t), g(t) et h(t) pour la valeur de n donnée
+coefficients_f <- calculate_fourier_coefficients(f, n)
+coefficients_g <- calculate_fourier_coefficients(g, n)
+coefficients_h <- calculate_fourier_coefficients(h, n)
+
+# Afficher les résultats
+print(paste("Pour f(t):"))
+print(paste("a0:", a0_f))
+print(paste("an:", coefficients_f$an))
+print(paste("bn:", coefficients_f$bn))
+print(paste("cn:", coefficients_f$cn))
+
+print(paste("Pour g(t):"))
+print(paste("a0:", a0_g))
+print(paste("an:", coefficients_g$an))
+print(paste("bn:", coefficients_g$bn))
+print(paste("cn:", coefficients_g$cn))
+
+print(paste("Pour h(t):"))
+print(paste("a0:", a0_h))
+print(paste("an:", coefficients_h$an))
+print(paste("bn:", coefficients_h$bn))
+print(paste("cn:", coefficients_h$cn))
+
+```
+
+
+Questions 3
+
+```{r}
+calculate_fourier_series <- function(f, n_max, t_values) {
+  a0 <- integrate(f, lower = -pi, upper = pi)$value / (2*pi)
+  series_real <- numeric(length(t_values))
+  series_complex <- complex(length(t_values))
+  
+  for (n in 1:n_max) {
+    coefficients <- calculate_fourier_coefficients(f, n)
+    series_real <- series_real + coefficients$an * cos(n*t_values) + coefficients$bn * sin(n*t_values)
+    series_complex <- series_complex + coefficients$cn * exp(1i * n * t_values)
+  }
+  
+  return(list(series_real = a0 + series_real, series_complex = a0 + series_complex))
+}
+
+t_values <- seq(-5*pi, 5*pi, by=0.01)
+
+# Liste des fonctions
+functions_list <- list(f = f, g = g, h = h)
+
+# Liste des noms des fonctions
+function_names <- c("f", "g", "h")
+library(ggplot2)
+
+
+for (i in 1:length(functions_list)) {
+  # Boucle sur chaque valeur de n
+  for (n in c(2, 3, 8, 20)) {
+    # Calculer les valeurs de la fonction et les sommes des séries
+    function_values <- functions_list[[i]](t_values)
+    series <- calculate_fourier_series(functions_list[[i]], n, t_values)
+    
+    # Créer un data frame avec les résultats
+    data <- data.frame(t = t_values, function_values = function_values, series_real = series$series_real, series_complex = Re(series$series_complex))
+    
+    # Tracer les résultats
+    p <- ggplot(data, aes(x = t)) +
+      geom_line(aes(y = function_values, colour = "Signal d'entrée"), linetype = "solid", size = 1.2) +
+      geom_line(aes(y = series_real, colour = "Série réelle"), linetype = "dashed", size = 1.2) +
+      geom_line(aes(y = series_complex, colour = "Série complexe"), linetype = "dotted", size = 1.2) +
+      ggtitle(paste(function_names[i], "(t) avec n =", n)) +
+      xlab("t") +
+      ylab(paste(function_names[i], "(t)")) +
+      theme_minimal() +
+      scale_colour_manual(values = c("Signal d'entrée" = "blue", "Série réelle" = "red", "Série complexe" = "green")) +
+      labs(colour = "Légende") +
+      theme(legend.position = "bottom")
+    
+    # Imprimer le graphique
+    print(p)
+  }
+}
+
+
+```
+
+Question 4:
+
+
+
+```{r}
+library(ggplot2)
+
+calculate_spectra <- function(f) {
+  amplitudes <- numeric(8)
+  phases <- numeric(8)
+  complex_amplitudes <- numeric(15)
+  
+  for (n in 0:7) {
+    coefficients <- calculate_fourier_coefficients(f, n)
+    amplitudes[n + 1] <- sqrt(coefficients$an^2 + coefficients$bn^2)
+    phases[n + 1] <- atan2(coefficients$bn, coefficients$an)
+  }
+  
+  for (n in -7:7) {
+    coefficients <- calculate_fourier_coefficients(f, n)
+    complex_amplitudes[n + 8] <- Mod(coefficients$cn)
+  }
+  
+  return(list(amplitudes = amplitudes, phases = phases, complex_amplitudes = complex_amplitudes))
+}
+
+
+plot_spectra <- function(spectra, function_name) {
+  n_values <- 0:7
+  n_values_complex <- -7:7
+  
+  data_real <- data.frame(n = n_values, Amplitude = spectra$amplitudes, Phase = spectra$phases)
+  data_complex <- data.frame(n = n_values_complex, Amplitude = spectra$complex_amplitudes)
+  
+  p1 <- ggplot(data_real, aes(x = n)) +
+    geom_segment(aes(xend = n, y = 0, yend = Amplitude), color = "blue", size = 1.2) +
+    geom_point(aes(y = Amplitude), color = "blue", size = 2) +
+    labs(title = paste("Spectre d'Amplitude pour", function_name), y = "Amplitude") +
+    theme_minimal()
+  
+  p2 <- ggplot(data_real, aes(x = n)) +
+    geom_segment(aes(xend = n, y = 0, yend = Phase), color = "red", size = 1.2) +
+    geom_point(aes(y = Phase), color = "red", size = 2) +
+    labs(title = paste("Spectre de Phase pour", function_name), y = "Phase (radians)") +
+    theme_minimal()
+  
+  p3 <- ggplot(data_complex, aes(x = n)) +
+    geom_segment(aes(xend = n, y = 0, yend = Amplitude), color = "green", size = 1.2) +
+    geom_point(aes(y = Amplitude), color = "green", size = 2) +
+    labs(title = paste("Spectre d'Amplitude Complex pour", function_name), y = "Amplitude") +
+    theme_minimal()
+  
+  return(list(p1 = p1, p2 = p2, p3 = p3))
+}
+
+# Étape 3 : Comparaison et Interprétation
+# Calculer les spectres pour chaque fonction
+spectra_f <- calculate_spectra(f)
+spectra_g <- calculate_spectra(g)
+spectra_h <- calculate_spectra(h)
+
+# Tracer les spectres pour chaque fonction
+plots_f <- plot_spectra(spectra_f, "f(t)")
+plots_g <- plot_spectra(spectra_g, "g(t)")
+plots_h <- plot_spectra(spectra_h, "h(t)")
+
+# Imprimer les graphiques
+print(plots_f$p1)
+print(plots_f$p2)
+print(plots_f$p3)
+
+print(plots_g$p1)
+print(plots_g$p2)
+print(plots_g$p3)
+
+print(plots_h$p1)
+print(plots_h$p2)
+print(plots_h$p3)
+
+```
+

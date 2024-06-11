@@ -1,0 +1,212 @@
+---
+title: "Analyses de données - Maths S3"
+date: "2023-09-14"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Analyses de données 
+
+## Méthode du Khi-deux
+
+### Librairies
+
+
+```{r, echo=FALSE}
+library(corrplot)
+library(FactoMineR)
+library(ggplot2)
+library(factoextra)
+```
+
+# 4.2 Doit-on ouvrir ce restaurant ?
+
+```{r}
+# Créer le tableau de données
+tableau <- data.frame(
+  Jour = c("Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"),
+  Theoriques_pourcentage = c(10, 10, 15, 20, 30, 15),
+  Observes = c(30, 14, 34, 45, 57, 20)
+)
+
+# Afficher le tableau de données
+print(tableau)
+```
+
+```{r}
+# Somme des fréquences observées
+total_observations <- sum(tableau$Observes)
+
+# Somme des fréquences théoriques
+tableau$Attendus <- (tableau$Theoriques_pourcentage / 100) * total_observations
+
+# Test du Khi-deux
+resultat_test <- chisq.test(x = tableau$Observes, p = tableau$Attendus / total_observations)
+
+# Affichage du résultat
+print(resultat_test)
+```
+
+# 5. ACP
+
+## Analyse rapide
+## 1. Récupérer les données du fichier "decathlon" et donner la matrice corrélation des variables quantitatives (ne pas prendre COMPET)
+
+
+```{r}
+# Lire le fichier decathlon.dat
+data <- read.table("data/decathlon.dat", header = TRUE)
+
+# Renommage des colonnes
+colnames(data) = c("course 100m", "Saut en longueur", "Lancer de poids", "Saut en hauteur", "course 400m", "course haies 110m", "Disque", "Saut a la perche", "Javelot", "course 1500m", "Rang", "Points", "Competition")
+```
+
+```{r}
+# Variables quantitatives pour matrice de corrélation
+df = data[,-c(13)]
+matrice_correlation = cor(df)
+
+# Utiliser corrplot pour visualiser la matrice de corrélation
+corrplot(matrice_correlation, method = "circle")
+print(matrice_correlation)
+```
+
+
+## 2. Quelles sont les couples de variables les plus corrélées, les moins corréelées, les plus opposées ? Justifier.
+
+
+```{r}
+# variables correlees positivement
+temp = data[c("Points","Saut en longueur","Lancer de poids","Saut en hauteur","course 100m","course 400m","Rang","course haies 110m","Disque")]
+correlees = cor(temp)
+
+# Utiliser corrplot pour visualiser la matrice de corrélation
+corrplot(correlees, method = "circle")
+```
+
+```{r}
+# variables corelees negativement
+temp = data[c("Points","Saut en longueur","Lancer de poids","Saut en hauteur","course 100m","course 400m","Rang","course haies 110m")]
+peu_correlees = cor(temp)
+
+# Utiliser corrplot pour visualiser la matrice de corrélation
+corrplot(peu_correlees, method = "circle")
+```
+
+
+
+## 3. Comment se groupent les variables du point de vue des signes de corrélation ? Expliquez pour quoi. 
+
+
+## 4. Donner les valeurs propres de la matrice de corrélation. Trier ces valeurs propres et donner le nombre de vecteurs propres qui expliquent le plus l'inertie du nuage des individus. Quelle règle peut-on utiliser ? Donner le pourcentage d'inertie totale en conservant les trois premiers vecteurs propres.
+
+```{r}
+# Nouveau dataframe sans RANG, POINTS et COMPET.
+decathlon_acp = data[,-c(11,12,13)]
+```
+
+```{r}
+# Normalisation et ACP
+data_norm = scale(decathlon_acp)
+res.pca = PCA(data_norm)
+
+# Valeurs propres / variances
+eig.val = get_eigenvalue(res.pca)
+print(eig.val)
+
+# Visualisation des valeurs propres
+fviz_eig(res.pca, addlabels = TRUE, main = "Visualisation des valeurs propres")
+```
+
+## 5 & 6 & 7 & 8
+
+
+```{r}
+# Contribution des variables aux Dim 1, 2 et 3
+fviz_cos2(res.pca, choice="ind", axes = 1:3)
+```
+
+```{r}
+# Axes 1 et 2
+fviz_pca_ind(res.pca, axes = c(1,2), col.ind = "cos2")
+
+# Axes 2 et 3
+fviz_pca_ind(res.pca, axes = c(2,3), col.ind = "cos2")
+```
+
+
+
+```{r}
+# Obtenir les coordonnées des individus pour les trois premières composantes principales
+ind.coord <- res.pca$ind$coord[,1:3]
+colnames(ind.coord) <- c("C1", "C2", "C3")
+
+ind.coord
+```
+
+
+
+```{r}
+# Q6
+# Tableau de correlation des variables par rapport à Dim 1 2 et 3
+res.pca$var$cor
+```
+
+
+```{r}
+# Cercles de correlation
+fviz_pca_var(res.pca, axes = c(1, 2), col.var="cos2")
+
+fviz_pca_var(res.pca, axes = c(2, 3), col.var="cos2")
+```
+
+```{r}
+# Q7
+# Affichage des composantes principales
+var = get_pca_var(res.pca)
+print(var)
+
+# Contribution des variables à Dim 1
+fviz_contrib(res.pca, choice="var", axes = 1, top = 10)
+
+# Contribution des variables à Dim 2
+fviz_contrib(res.pca, choice="var", axes = 2, top = 10)
+
+# Contribution des variables à Dim 3
+fviz_contrib(res.pca, choice="var", axes = 3, top = 10)
+
+# Contribution des variables aux Dim 1, 2 et 3
+fviz_contrib(res.pca, choice="var", axes = 1:3)
+```
+
+
+
+```{r}
+# Nouveau dataframe sans RANG, POINTS et COMPET.
+# df_acp = df[, !(names(df) %in% c("RANG", "POINTS", "COMPET"))]
+df_acp = decathlon_acp
+
+# Normalisation et ACP
+res.pca = PCA(df_acp)
+
+# Valeurs propres / variances
+eig.val = get_eigenvalue(res.pca)
+print(eig.val)
+
+# Visualisation des valeurs propres
+fviz_eig(res.pca, addlabels = TRUE, main = "Visualisation des valeurs propres")
+
+fviz_pca_var(res.pca, axes = c(2, 3), col.var="cos2")
+
+# Axes 1 et 2
+fviz_pca_ind(res.pca, axes = c(1,2), col.ind = "cos2")
+
+# Axes 2 et 3
+fviz_pca_ind(res.pca, axes = c(2,3), col.ind = "cos2")
+```
+
+
+
